@@ -37,22 +37,14 @@ let chart = new Chart(ctx, {
             label: 'Threshold Line', // CHECK: add as annotation (chart.js plugin)
             fill: false,
             pointRadius: 0,
-            borderColor: 'rgb(255, 0, 255)',
+            borderColor: 'rgb(128, 128, 128)',
+            borderDash: [10,5],
             data: threshold
         }]
     },
 
     // Configuration options go here
-    options: {
-        animation: {
-            duration: 0 // general animation time
-        },
-        hover: {
-            animationDuration: 0 // duration of animations when hovering an item
-        },
-        responsiveAnimationDuration: 0, // animation duration after a resize
-
-    }
+    options: {}
 });
 
 
