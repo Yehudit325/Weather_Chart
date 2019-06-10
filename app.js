@@ -5,6 +5,8 @@ let dates = [];
 
 let temperatures = [];
 
+let pointsColor = [];
+
 let thresholdValue = 20;
 let threshold = [];
 
@@ -26,7 +28,8 @@ let chart = new Chart(ctx, {
             label: myLocation.city,
             fill: false,
             lineTension: 0.1,
-            pointBackgroundColor: ['rgb(255, 0, 255)', 'rgb(0, 255, 0)'],
+            pointBackgroundColor: pointsColor,
+            pointBorderColor: pointsColor,
             borderColor: 'rgb(26, 83, 255)',
             data: temperatures
         },
@@ -40,7 +43,16 @@ let chart = new Chart(ctx, {
     },
 
     // Configuration options go here
-    options: {}
+    options: {
+        animation: {
+            duration: 0 // general animation time
+        },
+        hover: {
+            animationDuration: 0 // duration of animations when hovering an item
+        },
+        responsiveAnimationDuration: 0, // animation duration after a resize
+
+    }
 });
 
 
@@ -62,6 +74,7 @@ function handleWeather(weather) {
     temperatures.push(avgTemp);
 
      // CHECK: if possible to add after all requests have been made and not per request (Promise.all() ???)
+    markPoints(avgTemp);
     threshold.push(thresholdValue);
     chart.update();
 }
@@ -87,6 +100,37 @@ function fillChartData() {
     }
 }
 
-fillDates("2016-03-03", "2016-03-10");
+function markPoints(point) {
+        if (point >= thresholdValue) {
+            pointsColor.push('rgb(255, 0, 0)');
+        } else {
+            pointsColor.push('rgb(26, 83, 255)');
+        }
+};
 
-fillChartData();
+function processData() {
+    let startDate = document.getElementById("startDate").value;
+    let endDate = document.getElementById("endDate").value;
+    thresholdValue = document.getElementById("thresholdVal").value;
+    fillDates(startDate, endDate);
+    fillChartData();
+
+    console.log(startDate,endDate);
+    console.log("threshold value: " + thresholdValue);
+}
+
+document.getElementById("process").addEventListener('click', processData);
+
+document.addEventListener("keydown", function(event) {
+    // Number 13 is the "Enter" key on the keyboard
+    if (event.keyCode === 13) {
+      // Cancel the default action, if needed
+      event.preventDefault();
+      // Trigger the button element with a click
+      document.getElementById("process").click();
+    }
+  });
+
+// fillDates("2016-03-03", "2016-03-10");
+
+// fillChartData();

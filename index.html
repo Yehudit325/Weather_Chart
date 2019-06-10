@@ -9,6 +9,14 @@
 
 <body>
     <canvas id="lineChart"></canvas>
+    <div class='userInput'>
+        <form>
+            Start Date: <input id="startDate" type="date" name="start">
+            End Date: <input id="endDate" type="date" name="end">
+            Threshold: <input id="thresholdVal" type="text" placeholder="20°">
+            <input id="process" type="button" value="Get Data">
+        </form>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
     <script src="app.js"></script>
