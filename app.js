@@ -5,7 +5,8 @@ let dates = [];
 
 let temperatures = [];
 
-let threshold;
+let thresholdValue = 20;
+let threshold = [];
 
 // let dataset = { 
 //                 dates: [],
@@ -25,8 +26,16 @@ let chart = new Chart(ctx, {
             label: myLocation.city,
             fill: false,
             lineTension: 0.1,
+            pointBackgroundColor: ['rgb(255, 0, 255)', 'rgb(0, 255, 0)'],
             borderColor: 'rgb(26, 83, 255)',
             data: temperatures
+        },
+        {
+            label: 'Threshold Line', // CHECK: add as annotation (chart.js plugin)
+            fill: false,
+            pointRadius: 0,
+            borderColor: 'rgb(255, 0, 255)',
+            data: threshold
         }]
     },
 
@@ -43,16 +52,20 @@ function getWeatherData(date) {
                 + myLocation.long + "," + date + "T12:00:00?exclude=currently,flags,hourly&units=si";
 
     return fetch(URL).then(response => response.json())
-    .then(data => handle(data))
+    .then(data => handleWeather(data))
     .catch(error => console.error('Error:', error));
 };
 
-function handle(weather) {
+function handleWeather(weather) {
     let avgTemp = (weather.daily.data[0].temperatureHigh + weather.daily.data[0].temperatureLow)/2;
     avgTemp = Number(avgTemp.toFixed(2));
     temperatures.push(avgTemp);
+
+     // CHECK: if possible to add after all requests have been made and not per request (Promise.all() ???)
+    threshold.push(thresholdValue);
     chart.update();
 }
+
 
 // add feature: check to make sure startDate < endDate
 function fillDates(startDate, endDate) {
@@ -65,21 +78,15 @@ function fillDates(startDate, endDate) {
                     + ("0"+(day.getMonth()+1)).slice(-2) + "-"
                     + ("0" + day.getDate()).slice(-2));
     }
+
 }
 
-function fillTemperatures() {
+function fillChartData() {
     for (let i = 0; i < dates.length; ++i) {
         getWeatherData(dates[i]);
     }
 }
 
-fillDates("2016-03-03", "2016-07-30");
-// console.log(dates);
+fillDates("2016-03-03", "2016-03-10");
 
-fillTemperatures();
-// console.log(temperatures);
-
-
-// apiRequest("2016-02-03");
-
-
+fillChartData();
