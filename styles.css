@@ -13,6 +13,7 @@
   h1 {
     margin: 10px;
     color: #000066;
+    font-size: 3vw;
   }
 
   h3 {
@@ -27,6 +28,7 @@
   .userInput {
     font-family: Verdana, Geneva, sans-serif;
     color: #000066;
+    font-size: 1.5vw;
   }
 
   #lineChart {

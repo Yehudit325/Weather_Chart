@@ -1,0 +1,32 @@
+
+  /* Mobile Styles */
+  @media only screen and (max-width: 400px) {
+    body {
+        min-width: 310px;
+    }
+    .userInput {
+        font-size: 12px;
+    }
+    h1 {
+        font-size: 20px;
+    }
+    
+  }
+  
+  /* Tablet Styles */
+  @media only screen and (min-width: 401px) and (max-width: 960px) {
+    .canvasHolder, .userInput {
+        width: 85%;
+     }
+
+     .userInput {
+        font-size: 2vw;
+    }
+  }
+  
+  /* Desktop Styles */
+  @media only screen and (min-width: 961px) {
+    .canvasHolder, .userInput {
+        width: 70%;
+    }
+  }
