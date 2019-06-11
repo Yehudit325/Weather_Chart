@@ -1,0 +1,49 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+
+  body {
+    background-color: #cce6ff;
+    text-align: center;
+  }
+
+  h1 {
+    margin: 10px;
+    color: #000066;
+  }
+
+  h3 {
+    margin-top: 10px;
+  }
+
+  .canvasHolder, .userInput {
+    margin: auto;
+    width: 100%;
+  }
+
+  .userInput {
+    font-family: Verdana, Geneva, sans-serif;
+    color: #000066;
+  }
+
+  #lineChart {
+    background-color: white;
+  }
+
+  input {
+    margin: 8px;
+    padding: 2px;
+    padding-left: 5px;
+  }
+
+  #thresholdVal, #process {
+    padding: 5px;
+    width: 110px;
+  }
+
+  #process {
+      font-weight: bold;
+  }
