@@ -16,8 +16,10 @@ let threshold = [];
 //                 threshold: x
 //               };
 
-let ctx = document.getElementById('lineChart').getContext('2d');
-let chart = new Chart(ctx, {
+
+function renderChart() {
+    let ctx = document.getElementById('lineChart').getContext('2d');
+    let chart = new Chart(ctx, {
     // The type of chart we want to create
     type: 'line',
 
@@ -45,7 +47,9 @@ let chart = new Chart(ctx, {
 
     // Configuration options go here
     options: {}
-});
+    });
+}
+
 
 
 function getWeatherData(date) {
@@ -66,9 +70,9 @@ function handleWeather(weather) {
     temperatures.push(avgTemp);
 
      // CHECK: if possible to add after all requests have been made and not per request (Promise.all() ???)
-    markPoints(avgTemp);
-    threshold.push(thresholdValue);
-    chart.update();
+    // markPoints(avgTemp);
+    // threshold.push(thresholdValue);
+    // chart.update();
 }
 
 
@@ -92,6 +96,31 @@ function fillChartData() {
     }
 }
 
+function urlString(date) {
+    return "https://cors-anywhere.herokuapp.com/https://api.darksky.net/forecast/e2022fecdf5a40b65981825532c796c0/" + myLocation.lat + ","
+             + myLocation.long + "," + date + "T12:00:00?exclude=currently,flags,hourly&units=si";
+}
+
+function get(url) {
+  return new Promise((resolve, reject) => {
+    fetch(url)
+    .then(response => response.json())
+    .then(data => {
+        handleWeather(data);
+        resolve(data);
+    })
+    .catch(error => console.error('Error:', error));
+  });
+}
+
+async function result() {
+  for (let i = 0; i < dates.length; ++i) {
+    const value = await get(urlString(dates[i]));
+  }
+    console.log(temperatures);
+    renderChart();
+}
+
 function markPoints(point) {
         if (point >= thresholdValue) {
             pointsColor.push('rgb(255, 0, 0)');
@@ -100,15 +129,25 @@ function markPoints(point) {
         }
 };
 
+function reset() {
+    // chart.reset();
+    dates.length = 0;
+    temperatures.length = 0;
+    pointsColor.length = 0;
+    threshold.length = 0;
+}
+
 function processData() {
+    reset();
     let startDate = document.getElementById("startDate").value;
     let endDate = document.getElementById("endDate").value;
     thresholdValue = document.getElementById("thresholdVal").value;
     fillDates(startDate, endDate);
-    fillChartData();
+    // fillChartData();
+    result();
 
-    console.log(startDate,endDate);
-    console.log("threshold value: " + thresholdValue);
+    // console.log(startDate,endDate);
+    // console.log(temperatures);
 }
 
 document.getElementById("process").addEventListener('click', processData);
