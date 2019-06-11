@@ -17,7 +17,15 @@ let threshold = [];
 //               };
 
 
-function renderChart() {
+/* BUG: when dates are changed chart returns error 
+    (Uncaught TypeError: Cannot read property 'skip' of undefined)
+*/
+/* ATTENTION: when there are many data points chart rendering takes a while
+    because program is waiting untill all api requests are made before rendering chart
+    - should chart be rendered as point are returning???
+    - maybe display note on webpage keeping the user posted
+*/
+
     let ctx = document.getElementById('lineChart').getContext('2d');
     let chart = new Chart(ctx, {
     // The type of chart we want to create
@@ -48,32 +56,40 @@ function renderChart() {
     // Configuration options go here
     options: {}
     });
+
+
+function urlString(date) {
+    return "https://cors-anywhere.herokuapp.com/https://api.darksky.net/forecast/e2022fecdf5a40b65981825532c796c0/" + myLocation.lat + ","
+             + myLocation.long + "," + date + "T12:00:00?exclude=currently,flags,hourly&units=si";
 }
 
-
-
-function getWeatherData(date) {
-    // let URL = `https://api.darksky.net/forecast/e2022fecdf5a40b65981825532c796c0/${myLocation.lat},
-    //           ${myLocation.long},${date}T12:00:00?exclude=currently,flags,hourly&units=si`;
-
-    let URL = "https://cors-anywhere.herokuapp.com/https://api.darksky.net/forecast/e2022fecdf5a40b65981825532c796c0/" + myLocation.lat + ","
-                + myLocation.long + "," + date + "T12:00:00?exclude=currently,flags,hourly&units=si";
-
-    return fetch(URL).then(response => response.json())
-    .then(data => handleWeather(data))
-    .catch(error => console.error('Error:', error));
-};
+function getWeatherData(url) {
+    return new Promise((resolve, reject) => {
+      fetch(url)
+      .then(response => response.json())
+      .then(data => {
+          handleWeather(data);
+          resolve(data);
+      })
+      .catch(error => console.error('Error:', error));
+    });
+  }
 
 function handleWeather(weather) {
     let avgTemp = (weather.daily.data[0].temperatureHigh + weather.daily.data[0].temperatureLow)/2;
     avgTemp = Number(avgTemp.toFixed(2));
     temperatures.push(avgTemp);
 
-     // CHECK: if possible to add after all requests have been made and not per request (Promise.all() ???)
-    // markPoints(avgTemp);
-    // threshold.push(thresholdValue);
-    // chart.update();
+    threshold.push(thresholdValue);
+    markPoints(avgTemp);
 }
+
+async function fillChartData() {
+    for (let i = 0; i < dates.length; ++i) {
+      let value = await getWeatherData(urlString(dates[i]));
+    }
+    chart.update();
+  }
 
 
 // add feature: check to make sure startDate < endDate
@@ -90,47 +106,21 @@ function fillDates(startDate, endDate) {
 
 }
 
-function fillChartData() {
-    for (let i = 0; i < dates.length; ++i) {
-        getWeatherData(dates[i]);
-    }
-}
-
-function urlString(date) {
-    return "https://cors-anywhere.herokuapp.com/https://api.darksky.net/forecast/e2022fecdf5a40b65981825532c796c0/" + myLocation.lat + ","
-             + myLocation.long + "," + date + "T12:00:00?exclude=currently,flags,hourly&units=si";
-}
-
-function get(url) {
-  return new Promise((resolve, reject) => {
-    fetch(url)
-    .then(response => response.json())
-    .then(data => {
-        handleWeather(data);
-        resolve(data);
-    })
-    .catch(error => console.error('Error:', error));
-  });
-}
-
-async function result() {
-  for (let i = 0; i < dates.length; ++i) {
-    const value = await get(urlString(dates[i]));
-  }
-    console.log(temperatures);
-    renderChart();
-}
+// function fillThreshold() {
+//     threshold = Array(temperatures.length).fill(thresholdValue);
+// }
 
 function markPoints(point) {
-        if (point >= thresholdValue) {
-            pointsColor.push('rgb(255, 0, 0)');
-        } else {
-            pointsColor.push('rgb(26, 83, 255)');
-        }
-};
+    if (point >= thresholdValue) {
+        pointsColor.push('rgb(255, 0, 0)');
+    } else {
+        pointsColor.push('rgb(26, 83, 255)');
+    };   
+}
 
+// ADD: functionality - reset only if dates have changed
 function reset() {
-    // chart.reset();
+    chart.reset();
     dates.length = 0;
     temperatures.length = 0;
     pointsColor.length = 0;
@@ -143,12 +133,11 @@ function processData() {
     let endDate = document.getElementById("endDate").value;
     thresholdValue = document.getElementById("thresholdVal").value;
     fillDates(startDate, endDate);
-    // fillChartData();
-    result();
-
-    // console.log(startDate,endDate);
-    // console.log(temperatures);
+    fillChartData();  
 }
+
+
+
 
 document.getElementById("process").addEventListener('click', processData);
 
@@ -161,7 +150,3 @@ document.addEventListener("keydown", function(event) {
       document.getElementById("process").click();
     }
   });
-
-// fillDates("2016-03-03", "2016-03-10");
-
-// fillChartData();
