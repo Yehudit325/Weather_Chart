@@ -124,6 +124,7 @@ function updateThreshold(value) {
     dataset.thresholdValue = value;
     dataset.threshold = Array(dataset.temperatures.length).fill(value);
     chart.data.datasets[1].data = dataset.threshold;
+    chart.update();
 }
 
 function reset() {
