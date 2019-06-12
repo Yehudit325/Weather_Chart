@@ -124,6 +124,14 @@ function updateThreshold(value) {
     dataset.thresholdValue = value;
     dataset.threshold = Array(dataset.temperatures.length).fill(value);
     chart.data.datasets[1].data = dataset.threshold;
+     //update marked points
+     dataset.pointsColor.length = 0;
+     for (let i = 0; i < dataset.temperatures.length; ++i) {
+        markPoints(dataset.temperatures[i]);
+    }
+    chart.data.datasets[0].pointBackgroundColor = dataset.pointsColor;
+    chart.data.datasets[0].pointBorderColor = dataset.pointsColor;
+
     chart.update();
 }
 
