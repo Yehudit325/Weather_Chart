@@ -1,30 +1,14 @@
 
 let myLocation = {city:'Tel Aviv', lat: 32.0879122, long: 34.7272058};
 
-let dates = [];
+let dataset = { 
+                dates: [],
+                temperatures: [],
+                pointsColor: [],
+                thresholdValue: 0,
+                threshold: []
+              };
 
-let temperatures = [];
-
-let pointsColor = [];
-
-let thresholdValue = 20;
-let threshold = [];
-
-// let dataset = { 
-//                 dates: [],
-//                 temeratures: [],
-//                 threshold: x
-//               };
-
-
-/* BUG: when dates are changed chart returns error 
-    (Uncaught TypeError: Cannot read property 'skip' of undefined)
-*/
-/* ATTENTION: when there are many data points chart rendering takes a while
-    because program is waiting untill all api requests are made before rendering chart
-    - should chart be rendered as point are returning???
-    - maybe display note on webpage keeping the user posted
-*/
 
     let ctx = document.getElementById('lineChart').getContext('2d');
     let chart = new Chart(ctx, {
@@ -33,15 +17,15 @@ let threshold = [];
 
     // The data for our dataset
     data: {
-        labels: dates,
+        labels: dataset.dates,
         datasets: [{
             label: myLocation.city,
             fill: false,
             lineTension: 0.1,
-            pointBackgroundColor: pointsColor,
-            pointBorderColor: pointsColor,
+            pointBackgroundColor: dataset.pointsColor,
+            pointBorderColor: dataset.pointsColor,
             borderColor: 'rgb(26, 83, 255)',
-            data: temperatures
+            data: dataset.temperatures
         },
         {
             label: 'Threshold Line', // CHECK: add as annotation (chart.js plugin)
@@ -49,7 +33,7 @@ let threshold = [];
             pointRadius: 0,
             borderColor: 'rgb(128, 128, 128)',
             borderDash: [10,5],
-            data: threshold
+            data: dataset.threshold
         }]
     },
 
@@ -63,80 +47,94 @@ function urlString(date) {
              + myLocation.long + "," + date + "T12:00:00?exclude=currently,flags,hourly&units=si";
 }
 
+function checkTimeout(ms, promise) {
+    return new Promise(function(resolve, reject) {
+      setTimeout(function() {
+        reject(new Error("timeout"))
+      }, ms)
+      promise.then(resolve, reject)
+    })
+  }
+
 function getWeatherData(url) {
     return new Promise((resolve, reject) => {
-      fetch(url)
+        checkTimeout(2000, fetch(url)
       .then(response => response.json())
       .then(data => {
           handleWeather(data);
           resolve(data);
       })
-      .catch(error => console.error('Error:', error));
-    });
+      .catch(error => console.error('Error:', error))
+    )});
   }
 
 function handleWeather(weather) {
     let avgTemp = (weather.daily.data[0].temperatureHigh + weather.daily.data[0].temperatureLow)/2;
     avgTemp = Number(avgTemp.toFixed(2));
-    temperatures.push(avgTemp);
+    dataset.temperatures.push(avgTemp);
 
-    threshold.push(thresholdValue);
+    dataset.threshold.push(dataset.thresholdValue);
     markPoints(avgTemp);
+    chart.update(); 
 }
 
 async function fillChartData() {
-    for (let i = 0; i < dates.length; ++i) {
-      let value = await getWeatherData(urlString(dates[i]));
+    for (let i = 0; i < dataset.dates.length; ++i) {
+      let value = await getWeatherData(urlString(dataset.dates[i]));
     }
-    chart.update();
+    // chart.update();
   }
 
 
-// add feature: check to make sure startDate < endDate
 function fillDates(startDate, endDate) {
     const from = new Date(startDate);
     const to = new Date(endDate);
     
     // loop for every day
     for (let day = from; day <= to; day.setDate(day.getDate() + 1)) {   
-        dates.push(day.getFullYear() + "-" 
+        dataset.dates.push(day.getFullYear() + "-" 
                     + ("0"+(day.getMonth()+1)).slice(-2) + "-"
                     + ("0" + day.getDate()).slice(-2));
     }
-
 }
 
-// function fillThreshold() {
-//     threshold = Array(temperatures.length).fill(thresholdValue);
-// }
-
 function markPoints(point) {
-    if (point >= thresholdValue) {
-        pointsColor.push('rgb(255, 0, 0)');
+    if (point >= dataset.thresholdValue) {
+        dataset.pointsColor.push('rgb(255, 0, 0)');
     } else {
-        pointsColor.push('rgb(26, 83, 255)');
+        dataset.pointsColor.push('rgb(26, 83, 255)');
     };   
 }
 
 // ADD: functionality - reset only if dates have changed
 function reset() {
     chart.reset();
-    dates.length = 0;
-    temperatures.length = 0;
-    pointsColor.length = 0;
-    threshold.length = 0;
+    dataset.dates.length = 0;
+    dataset.temperatures.length = 0;
+    dataset.pointsColor.length = 0;
+    dataset.threshold.length = 0;
 }
 
 function processData() {
     reset();
     let startDate = document.getElementById("startDate").value;
     let endDate = document.getElementById("endDate").value;
-    thresholdValue = document.getElementById("thresholdVal").value;
+    // Validate dates
+    if (startDate > endDate) {
+        alert("Dates are not valid, please enter end date greater than start date");
+        return;
+    }
+
+    dataset.thresholdValue = document.getElementById("thresholdVal").value;
+    // check threshold value not too high or too low
+    if (dataset.thresholdValue > 50 || dataset.thresholdValue < -40) {
+        alert("Please enter threshold value within range (-40 - 50)");
+        return;
+    }
+
     fillDates(startDate, endDate);
     fillChartData();  
 }
-
-
 
 
 document.getElementById("process").addEventListener('click', processData);
