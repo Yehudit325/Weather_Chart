@@ -1,5 +1,10 @@
+/****************************************************
+ *               Variable Declarations              *
+ ****************************************************/
 
 let myLocation = {city:'Tel Aviv', lat: 32.0879122, long: 34.7272058};
+
+let dateRange = {startDate: "", endDate: ""};
 
 let dataset = { 
                 dates: [],
@@ -41,12 +46,16 @@ let dataset = {
     options: {}
     });
 
+/****************************************************
+ *               Function Declarations              *
+ ****************************************************/
 
 function urlString(date) {
     return "https://cors-anywhere.herokuapp.com/https://api.darksky.net/forecast/e2022fecdf5a40b65981825532c796c0/" + myLocation.lat + ","
              + myLocation.long + "," + date + "T12:00:00?exclude=currently,flags,hourly&units=si";
 }
 
+// Function to check timeout errors of a promise
 function checkTimeout(ms, promise) {
     return new Promise(function(resolve, reject) {
       setTimeout(function() {
@@ -68,6 +77,7 @@ function getWeatherData(url) {
     )});
   }
 
+  // Recives the data from the api requests and fills the dataset accordingly
 function handleWeather(weather) {
     let avgTemp = (weather.daily.data[0].temperatureHigh + weather.daily.data[0].temperatureLow)/2;
     avgTemp = Number(avgTemp.toFixed(2));
@@ -78,14 +88,17 @@ function handleWeather(weather) {
     chart.update(); 
 }
 
+/* Makes multiple api calls for dates within the date range entered.
+    Each api calls waits for the previous one to finish so to keep data recieved in
+    the correct order */
 async function fillChartData() {
     for (let i = 0; i < dataset.dates.length; ++i) {
       let value = await getWeatherData(urlString(dataset.dates[i]));
     }
-    // chart.update();
   }
 
-
+/*   Takes the range entered by user and spreads it out into an array,
+     so that the data can be used for obtaining each url individualy */
 function fillDates(startDate, endDate) {
     const from = new Date(startDate);
     const to = new Date(endDate);
@@ -98,6 +111,7 @@ function fillDates(startDate, endDate) {
     }
 }
 
+// Marks the points above the threshhold line
 function markPoints(point) {
     if (point >= dataset.thresholdValue) {
         dataset.pointsColor.push('rgb(255, 0, 0)');
@@ -106,7 +120,12 @@ function markPoints(point) {
     };   
 }
 
-// ADD: functionality - reset only if dates have changed
+function updateThreshold(value) {
+    dataset.thresholdValue = value;
+    dataset.threshold = Array(dataset.temperatures.length).fill(value);
+    chart.data.datasets[1].data = dataset.threshold;
+}
+
 function reset() {
     chart.reset();
     dataset.dates.length = 0;
@@ -115,27 +134,43 @@ function reset() {
     dataset.threshold.length = 0;
 }
 
+// Process data entered by user
 function processData() {
-    reset();
     let startDate = document.getElementById("startDate").value;
     let endDate = document.getElementById("endDate").value;
+    let thresholdValue = document.getElementById("thresholdVal").value;
+    
     // Validate dates
-    if (startDate > endDate) {
-        alert("Dates are not valid, please enter end date greater than start date");
+    if ((startDate > endDate) || startDate === "" || endDate === "") {
+        alert("Please enter valid dates");
         return;
     }
 
-    dataset.thresholdValue = document.getElementById("thresholdVal").value;
     // check threshold value not too high or too low
-    if (dataset.thresholdValue > 50 || dataset.thresholdValue < -40) {
+    if (thresholdValue > 50 || thresholdValue < -40) {
         alert("Please enter threshold value within range (-40 - 50)");
         return;
     }
 
-    fillDates(startDate, endDate);
-    fillChartData();  
+    /* Check if dates have changed - run all
+        if only threshold is changed - do not recall all apis per date, just update threshold line
+        if dates and threshold do not change - do nothing */
+    if (startDate != dateRange.startDate || endDate != dateRange.endDate) {
+        reset();
+        dataset.thresholdValue = thresholdValue;
+        dateRange.startDate = startDate;
+        dateRange.endDate = endDate;
+
+        fillDates(startDate, endDate);
+        fillChartData(); 
+    } else if (thresholdValue != dataset.thresholdValue) {
+        updateThreshold(thresholdValue);
+    }
 }
 
+/****************************************************
+ *                  Event Listeners                 *
+ ****************************************************/
 
 document.getElementById("process").addEventListener('click', processData);
 
