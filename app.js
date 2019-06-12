@@ -146,12 +146,13 @@ function reset() {
 
 // Process data entered by user
 function processData() {
+    let today = new Date().toISOString().slice(0, 10);
     let startDate = document.getElementById("startDate").value;
     let endDate = document.getElementById("endDate").value;
     let thresholdValue = document.getElementById("thresholdVal").value;
     
     // Validate dates
-    if ((startDate > endDate) || startDate === "" || endDate === "") {
+    if ((startDate > endDate) || startDate === "" || endDate === "" || endDate > today) {
         alert("Please enter valid dates");
         return;
     }
