@@ -14,9 +14,8 @@ let dataset = {
                 threshold: []
               };
 
-
-    let ctx = document.getElementById('lineChart').getContext('2d');
-    let chart = new Chart(ctx, {
+let ctx = document.getElementById('lineChart').getContext('2d');
+let chart = new Chart(ctx, {
     // The type of chart we want to create
     type: 'line',
 
@@ -44,7 +43,7 @@ let dataset = {
 
     // Configuration options go here
     options: {}
-    });
+});
 
 /****************************************************
  *               Function Declarations              *
@@ -57,28 +56,28 @@ function urlString(date) {
 
 // Function to check timeout errors of a promise
 function checkTimeout(ms, promise) {
-    return new Promise(function(resolve, reject) {
-      setTimeout(function() {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
         reject(new Error("timeout"))
       }, ms)
       promise.then(resolve, reject)
     })
-  }
+}
 
 function getWeatherData(url) {
     return new Promise((resolve, reject) => {
-        checkTimeout(2000, fetch(url)
+        checkTimeout(5000, fetch(url)
       .then(response => response.json())
       .then(data => {
-          handleWeather(data);
+          handleWeatherData(data);
           resolve(data);
       })
       .catch(error => console.error('Error:', error))
     )});
-  }
+}
 
   // Recives the data from the api requests and fills the dataset accordingly
-function handleWeather(weather) {
+function handleWeatherData(weather) {
     let avgTemp = (weather.daily.data[0].temperatureHigh + weather.daily.data[0].temperatureLow)/2;
     avgTemp = Number(avgTemp.toFixed(2));
     dataset.temperatures.push(avgTemp);
@@ -89,17 +88,19 @@ function handleWeather(weather) {
 }
 
 /* Makes multiple api calls for dates within the date range entered.
-    Each api calls waits for the previous one to finish so to keep data recieved in
-    the correct order */
+ * Each api calls waits for the previous one to finish so to keep data 
+ * recieved in the correct order.
+ */
 async function fillChartData() {
     for (let i = 0; i < dataset.dates.length; ++i) {
       let value = await getWeatherData(urlString(dataset.dates[i]));
     }
-  }
+}
 
-/*   Takes the range entered by user and spreads it out into an array,
-     so that the data can be used for obtaining each url individualy */
-function fillDates(startDate, endDate) {
+/* Takes the range entered by user and spreads it out into an array,
+ * so that the data can be used for obtaining each url individualy
+ */
+ function fillDates(startDate, endDate) {
     const from = new Date(startDate);
     const to = new Date(endDate);
     
@@ -124,9 +125,9 @@ function updateThreshold(value) {
     dataset.thresholdValue = value;
     dataset.threshold = Array(dataset.temperatures.length).fill(value);
     chart.data.datasets[1].data = dataset.threshold;
-     //update marked points
-     dataset.pointsColor.length = 0;
-     for (let i = 0; i < dataset.temperatures.length; ++i) {
+    //update marked points
+    dataset.pointsColor.length = 0;
+    for (let i = 0; i < dataset.temperatures.length; ++i) {
         markPoints(dataset.temperatures[i]);
     }
     chart.data.datasets[0].pointBackgroundColor = dataset.pointsColor;
@@ -162,8 +163,9 @@ function processData() {
     }
 
     /* Check if dates have changed - run all
-        if only threshold is changed - do not recall all apis per date, just update threshold line
-        if dates and threshold do not change - do nothing */
+     * if only threshold is changed - do not recall all apis per date,
+     * just update threshold line if dates and threshold do not change - do nothing
+     */
     if (startDate != dateRange.startDate || endDate != dateRange.endDate) {
         reset();
         dataset.thresholdValue = thresholdValue;
@@ -183,7 +185,7 @@ function processData() {
 
 document.getElementById("process").addEventListener('click', processData);
 
-document.addEventListener("keydown", function(event) {
+document.addEventListener("keydown", (event) => {
     // Number 13 is the "Enter" key on the keyboard
     if (event.keyCode === 13) {
       // Cancel the default action, if needed
@@ -191,4 +193,4 @@ document.addEventListener("keydown", function(event) {
       // Trigger the button element with a click
       document.getElementById("process").click();
     }
-  });
+});
